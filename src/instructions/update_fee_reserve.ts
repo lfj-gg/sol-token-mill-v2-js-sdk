@@ -8,13 +8,10 @@ export async function updateFeeReserveInstruction(
 ): Promise<TransactionInstruction> {
   return await sdk.program.methods
     .updateFeeReserve()
-    .accountsPartial({
-      config: accounts.config,
+    .accounts({
       market: accounts.market,
       newFeeReserve: accounts.newFeeReserve || null,
-      creator: accounts.creator,
-      eventAuthority: accounts.eventAuthority,
-      program: accounts.program,
+      program: sdk.program.programId,
     })
     .instruction();
 }

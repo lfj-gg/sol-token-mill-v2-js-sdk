@@ -1,29 +1,31 @@
 import { TransactionInstruction } from "@solana/web3.js";
 import type { SwapAccounts, SwapParameters } from "../types";
 import type { TokenMillSDK } from "../sdk";
+import { TOKEN_MILL_CONFIG_ACCOUNT } from "../constants";
 
 export async function swapInstruction(
   sdk: TokenMillSDK,
   accounts: SwapAccounts,
   swapParameters: SwapParameters
 ): Promise<TransactionInstruction> {
+  const market = await sdk.program.account.market.fetch(accounts.market);
+  const config = await sdk.program.account.tokenMillConfig.fetch(
+    TOKEN_MILL_CONFIG_ACCOUNT
+  );
+
   return await sdk.program.methods
     .swap(swapParameters)
-    .accountsPartial({
-      config: accounts.config,
+    .accounts({
       market: accounts.market,
-      marketReserve0: accounts.marketReserve0,
+      marketReserve0: market.reserve0,
       userTokenAccount0: accounts.userTokenAccount0,
-      marketReserve1: accounts.marketReserve1,
+      marketReserve1: market.reserve1,
       userTokenAccount1: accounts.userTokenAccount1,
-      feeReserve: accounts.feeReserve,
-      protocolFeeReserve: accounts.protocolFeeReserve,
-      creatorFeePool: accounts.creatorFeePool,
+      feeReserve: market.feeReserve ?? config.creatorFeePool,
+      protocolFeeReserve: config.protocolFeeReserve,
+      creatorFeePool: config.creatorFeePool,
       user: accounts.user,
-      swapAuthority: accounts.swapAuthority || null,
-      tokenProgram: accounts.tokenProgram,
-      eventAuthority: accounts.eventAuthority,
-      program: accounts.program,
+      program: sdk.program.programId,
     })
     .instruction();
 }
