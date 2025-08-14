@@ -1,5 +1,4 @@
 import { PublicKey, Transaction } from "@solana/web3.js";
-import type { TokenMillSDK } from "../sdk";
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 
 export async function getVanityAddress(): Promise<PublicKey> {
@@ -8,7 +7,6 @@ export async function getVanityAddress(): Promise<PublicKey> {
     {
       headers: {
         "Content-Type": "application/json",
-        origin: "https://tokenmill.xyz",
         referer: "https://tokenmill.xyz",
       },
     }
@@ -27,7 +25,6 @@ export async function signMarketCreationTransaction(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        origin: "https://tokenmill.xyz",
         referer: "https://tokenmill.xyz",
       },
       body: JSON.stringify({

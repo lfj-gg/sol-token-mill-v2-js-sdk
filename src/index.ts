@@ -14,7 +14,6 @@ export type {
   SwapAccounts,
   SwapParameters,
   SwapResult,
-  MarketSettingsInput,
 } from "./types";
 
 // Re-export utilities

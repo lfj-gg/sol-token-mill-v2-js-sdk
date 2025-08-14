@@ -17,6 +17,7 @@ import type {
 export class TokenMillSDK {
   public readonly connection: Connection;
   public readonly program: Program<TokenMillV2>;
+  public apiKey?: string;
 
   constructor(rpc: string) {
     this.connection = new Connection(rpc, "confirmed");
@@ -24,6 +25,10 @@ export class TokenMillSDK {
     this.program = new Program<TokenMillV2>(tokenMillIdl as any, {
       connection: this.connection,
     });
+  }
+
+  setApiKey(apiKey: string) {
+    this.apiKey = apiKey;
   }
 
   // Instruction methods - delegate to existing instruction functions
