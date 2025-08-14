@@ -1,6 +1,7 @@
 import type { PublicKey } from "@solana/web3.js";
 import type { TokenMillSDK } from "../sdk";
 import { findMarketAddress } from "../utils/pda";
+import type { TokenMetadata } from "../prepareMarket";
 
 const MAX_FILE_SIZE = 5242880; // 5MB in bytes
 
@@ -115,9 +116,7 @@ export async function requestUpload(
 export async function uploadImage(
   presignedUploadUrl: string,
   fields: any,
-  imagePath: string,
-  bearerToken: string,
-  sdk: TokenMillSDK
+  imagePath: string
 ): Promise<void> {
   const file = await Bun.file(imagePath).arrayBuffer();
   if (file.byteLength > MAX_FILE_SIZE) {
@@ -145,7 +144,7 @@ export async function updateTokenMetadata(
   token: PublicKey,
   accessToken: string,
   imageUrl: string,
-  description: string
+  tokenMetadata: TokenMetadata
 ): Promise<void> {
   if (!sdk.apiKey) {
     throw new Error("This method requires an API key");
@@ -164,7 +163,11 @@ export async function updateTokenMetadata(
       },
       body: JSON.stringify({
         iconUrl: imageUrl,
-        description,
+        description: tokenMetadata.description,
+        discordUrl: tokenMetadata.socials?.discord,
+        telegramUrl: tokenMetadata.socials?.telegram,
+        twitterUrl: tokenMetadata.socials?.twitter,
+        websiteUrl: tokenMetadata.socials?.website,
       }),
     }
   );
