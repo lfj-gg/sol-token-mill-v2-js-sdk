@@ -178,6 +178,10 @@ export async function updateTokenMetadata(
   }
 }
 
+export function getMetadataURL(token: PublicKey): string {
+  return `https://api.tokenmill.xyz/v2/tokens/solana/${token.toBase58()}/metadata`;
+}
+
 export async function fetchTokenMetadata(
   sdk: TokenMillSDK,
   mint: PublicKey
@@ -186,14 +190,11 @@ export async function fetchTokenMetadata(
     throw new Error("This method requires an API key");
   }
 
-  const response = await Bun.fetch(
-    `https://api.tokenmill.xyz/v2/tokens/solana/${mint.toBase58()}/metadata`,
-    {
-      headers: {
-        "x-tokenmill-api-key": sdk.apiKey,
-      },
-    }
-  );
+  const response = await Bun.fetch(getMetadataURL(mint), {
+    headers: {
+      "x-tokenmill-api-key": sdk.apiKey,
+    },
+  });
 
   if (!response.ok) {
     throw new Error(`Failed to fetch metadata: ${response.statusText}`);

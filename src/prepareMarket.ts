@@ -6,6 +6,7 @@ import {
 import type { TokenMillSDK } from "./sdk";
 import {
   getMessageToSign,
+  getMetadataURL,
   login,
   requestUpload,
   updateTokenMetadata,
@@ -15,7 +16,6 @@ import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import nacl from "tweetnacl";
 import naclUtil from "tweetnacl-util";
 import { getVanityAddress, signMarketCreationTransaction } from "./api/vanity";
-import type { Instruction } from "@coral-xyz/anchor";
 
 export interface TokenMetadata {
   name: string;
@@ -34,7 +34,7 @@ export async function prepareMarketWithVanityAddress(
   sdk: TokenMillSDK,
   devKeypair: Keypair,
   tokenMetadata: TokenMetadata
-): Promise<TransactionInstruction> {
+): Promise<{ tokenAddress: PublicKey; ix: TransactionInstruction }> {
   const vanityAddress = await getVanityAddress();
 
   const tokenMetadataURI = await prepareTokenMetadata(
@@ -53,7 +53,7 @@ export async function prepareMarketWithVanityAddress(
     }
   );
 
-  return ix;
+  return { tokenAddress: vanityAddress, ix };
 }
 
 export async function prepareTokenMetadata(
@@ -94,5 +94,5 @@ export async function prepareTokenMetadata(
     tokenMetadata
   );
 
-  return destinationUrl;
+  return getMetadataURL(tokenAddress);
 }

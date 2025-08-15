@@ -23,9 +23,18 @@ export interface CreateMarketAccounts {
 
 export interface SwapAccounts {
   market: PublicKey;
+  user: PublicKey;
+}
+
+export interface SwapAccountsRaw {
+  market: PublicKey;
+  token: PublicKey;
   userTokenAccount0: PublicKey;
   userTokenAccount1: PublicKey;
   user: PublicKey;
+  feeReserve: PublicKey;
+  protocolFeeReserve: PublicKey;
+  creatorFeePool: PublicKey;
 }
 
 export interface UpdateFeeReserveAccounts {
