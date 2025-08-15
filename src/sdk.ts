@@ -12,6 +12,7 @@ import {
   createMarketInstruction,
   updateFeeReserveInstruction,
   swapInstruction,
+  type CreateMarketArgs,
 } from "./instructions";
 import type {
   CreateMarketAccounts,
@@ -132,6 +133,36 @@ export class TokenMillSDK {
     console.log("Transaction Signature:", signature, "✅");
   }
 
+  public async swap(
+    accounts: SwapAccounts,
+    swapParameters: SwapParameters,
+    devKeypair?: Keypair
+  ): Promise<void> {
+    if (!devKeypair) {
+      if (!this.anchorWallet) {
+        throw new Error(
+          "This function requires a Keypair or to have an initialized anchor wallet"
+        );
+      }
+      devKeypair = this.anchorWallet.payer;
+    }
+
+    const swapIx = await this.swapInstruction(accounts, swapParameters);
+
+    const tx = new Transaction().add(swapIx);
+
+    tx.recentBlockhash = (
+      await this.connection.getLatestBlockhash("confirmed")
+    ).blockhash;
+
+    tx.feePayer = accounts.user;
+    tx.sign(devKeypair);
+
+    const signature = await this.connection.sendRawTransaction(tx.serialize());
+
+    console.log("Transaction Signature:", signature, "✅");
+  }
+
   public async prepareMarketWithVanityAddress(
     devKeypair: Keypair,
     tokenMetadata: TokenMetadata
@@ -150,12 +181,7 @@ export class TokenMillSDK {
   // Instruction methods - delegate to existing instruction functions
   public async createMarketInstruction(
     accounts: CreateMarketAccounts,
-    args: {
-      name: string;
-      symbol: string;
-      uri: string;
-      swapAuthority?: PublicKey;
-    }
+    args: CreateMarketArgs
   ): Promise<TransactionInstruction> {
     return createMarketInstruction(this, accounts, args);
   }
