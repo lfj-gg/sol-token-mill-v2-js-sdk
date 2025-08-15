@@ -2,6 +2,7 @@ import type { PublicKey } from "@solana/web3.js";
 import type { TokenMillSDK } from "../sdk";
 import { findMarketAddress } from "../utils/pda";
 import type { TokenMetadata } from "../prepareMarket";
+import { ApiClient } from "./client";
 
 const MAX_FILE_SIZE = 5242880; // 5MB in bytes
 
@@ -9,29 +10,16 @@ export async function getMessageToSign(
   sdk: TokenMillSDK,
   address: PublicKey
 ): Promise<string> {
-  if (!sdk.apiKey) {
-    throw new Error("This method requires an API key");
-  }
-
-  const response = await Bun.fetch(
-    "https://api.tokenmill.xyz/v2/auth/web3-message",
+  const client = new ApiClient(sdk);
+  
+  const data = await client.requestMain<{ message: string }>(
+    "/v2/auth/web3-message",
     {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-tokenmill-api-key": sdk.apiKey,
-      },
-      body: JSON.stringify({
-        address,
-      }),
+      body: JSON.stringify({ address }),
     }
   );
-
-  if (!response.ok) {
-    throw new Error(`Failed to get message to sign: ${response.statusText}`);
-  }
-
-  const data: { message: string } = (await response.json()) as any;
+  
   return data.message;
 }
 
@@ -41,29 +29,16 @@ export async function login(
   message: string,
   signature: string
 ): Promise<string> {
-  if (!sdk.apiKey) {
-    throw new Error("This method requires an API key");
-  }
-
-  const response = await Bun.fetch("https://api.tokenmill.xyz/v2/auth/login", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-tokenmill-api-key": sdk.apiKey,
-    },
-    body: JSON.stringify({
-      address: address,
-      message,
-      signature,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to login: ${response.statusText}`);
-  }
-
-  const data: { accessToken: string; refreshToken: string } =
-    (await response.json()) as any;
+  const client = new ApiClient(sdk);
+  
+  const data = await client.requestMain<{ accessToken: string; refreshToken: string }>(
+    "/v2/auth/login",
+    {
+      method: "POST",
+      body: JSON.stringify({ address, message, signature }),
+    }
+  );
+  
   return data.accessToken;
 }
 
@@ -76,10 +51,6 @@ export async function requestUpload(
   fields: any;
   destinationUrl: string;
 }> {
-  if (!sdk.apiKey) {
-    throw new Error("This method requires an API key");
-  }
-
   const ext = imagePath.split(".").pop()?.toLowerCase();
   let contentType: string;
   if (ext === "png") {
@@ -90,27 +61,17 @@ export async function requestUpload(
     throw new Error("Only PNG and JPEG images are supported");
   }
 
-  const response = await Bun.fetch(
-    "https://api.tokenmill.xyz/v2/markets/drafts/upload/posturl",
+  const client = new ApiClient(sdk);
+  
+  return await client.requestMain(
+    "/v2/markets/drafts/upload/posturl",
     {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-        "x-tokenmill-api-key": sdk.apiKey,
-      },
-      body: JSON.stringify({
-        contentType,
-      }),
-    }
+      body: JSON.stringify({ contentType }),
+      requiresAuth: true,
+    },
+    accessToken
   );
-
-  if (!response.ok) {
-    throw new Error(`Failed to request upload: ${response.statusText}`);
-  }
-
-  const data = (await response.json()) as any;
-  return data;
 }
 
 export async function uploadImage(
@@ -146,21 +107,13 @@ export async function updateTokenMetadata(
   imageUrl: string,
   tokenMetadata: TokenMetadata
 ): Promise<void> {
-  if (!sdk.apiKey) {
-    throw new Error("This method requires an API key");
-  }
-
   const marketAddress = findMarketAddress(token);
-
-  const response = await Bun.fetch(
-    `https://api.tokenmill.xyz/v2/markets/solana/${marketAddress.toBase58()}/${token.toBase58()}`,
+  const client = new ApiClient(sdk);
+  
+  await client.requestMain<void>(
+    `/v2/markets/solana/${marketAddress.toBase58()}/${token.toBase58()}`,
     {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-        "x-tokenmill-api-key": sdk.apiKey,
-      },
       body: JSON.stringify({
         iconUrl: imageUrl,
         description: tokenMetadata.description,
@@ -169,36 +122,23 @@ export async function updateTokenMetadata(
         twitterUrl: tokenMetadata.socials?.twitter,
         websiteUrl: tokenMetadata.socials?.website,
       }),
-    }
+      requiresAuth: true,
+    },
+    accessToken
   );
-
-  if (!response.ok) {
-    console.log(response);
-    throw new Error(`Failed to update metadata: ${response.statusText}`);
-  }
 }
 
 export function getMetadataURL(token: PublicKey): string {
-  return `https://api.tokenmill.xyz/v2/tokens/solana/${token.toBase58()}/metadata`;
+  return `/v2/tokens/solana/${token.toBase58()}/metadata`;
 }
 
 export async function fetchTokenMetadata(
   sdk: TokenMillSDK,
   mint: PublicKey
 ): Promise<any> {
-  if (!sdk.apiKey) {
-    throw new Error("This method requires an API key");
-  }
-
-  const response = await Bun.fetch(getMetadataURL(mint), {
-    headers: {
-      "x-tokenmill-api-key": sdk.apiKey,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch metadata: ${response.statusText}`);
-  }
-
-  return await response.json();
+  const client = new ApiClient(sdk);
+  
+  return await client.requestMain(
+    `/v2/tokens/solana/${mint.toBase58()}/metadata`
+  );
 }
