@@ -15,11 +15,11 @@ export async function swapInstruction(
   );
 
   const userReserve0 = getAssociatedTokenAddressSync(
-    WRAPPED_SOL_MINT,
+    market.tokenMint0,
     accounts.user
   );
   const userReserve1 = getAssociatedTokenAddressSync(
-    market.tokenMint0,
+    WRAPPED_SOL_MINT,
     accounts.user
   );
 

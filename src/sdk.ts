@@ -62,22 +62,15 @@ export class TokenMillSDK {
     tokenMetadata: TokenMetadata,
     devKeypair?: Keypair
   ): Promise<void> {
-    if (!devKeypair) {
-      if (!this.anchorWallet) {
-        throw new Error(
-          "createMarket requires a Keypair or to have an initialized anchor wallet"
-        );
-      }
-      devKeypair = this.anchorWallet.payer;
-    }
+    const keypair = this.validateKeypair(devKeypair, "createMarket");
 
     const { tokenAddress, ix: marketCreationIx } =
-      await this.prepareMarketWithVanityAddress(devKeypair, tokenMetadata);
+      await this.prepareMarketWithVanityAddress(keypair, tokenMetadata);
 
     const createAtaIx = createAssociatedTokenAccountIdempotentInstruction(
-      devKeypair.publicKey,
-      getAssociatedTokenAddressSync(tokenAddress, devKeypair.publicKey),
-      devKeypair.publicKey,
+      keypair.publicKey,
+      getAssociatedTokenAddressSync(tokenAddress, keypair.publicKey),
+      keypair.publicKey,
       tokenAddress
     );
 
@@ -89,14 +82,14 @@ export class TokenMillSDK {
       {
         market: findMarketAddress(tokenAddress),
         token: tokenAddress,
-        user: devKeypair.publicKey,
+        user: keypair.publicKey,
         userTokenAccount0: getAssociatedTokenAddressSync(
           tokenAddress,
-          devKeypair.publicKey
+          keypair.publicKey
         ),
         userTokenAccount1: getAssociatedTokenAddressSync(
           WRAPPED_SOL_MINT,
-          devKeypair.publicKey
+          keypair.publicKey
         ),
         feeReserve: config.creatorFeePool,
         protocolFeeReserve: config.protocolFeeReserve,
@@ -110,19 +103,14 @@ export class TokenMillSDK {
       }
     );
 
-    const tx = new Transaction()
-      .add(marketCreationIx)
-      .add(createAtaIx)
-      .add(swapIx);
-
-    tx.recentBlockhash = (
-      await this.connection.getLatestBlockhash("confirmed")
-    ).blockhash;
-
-    tx.feePayer = devKeypair.publicKey;
+    const tx = await this.createAndSignTransaction(
+      [marketCreationIx, createAtaIx, swapIx],
+      keypair.publicKey,
+      []
+    );
 
     const signedTx = await signMarketCreationTransaction(tx);
-    signedTx.partialSign(devKeypair);
+    signedTx.partialSign(keypair);
 
     console.log("Creating token:", tokenAddress.toString());
 
@@ -138,25 +126,13 @@ export class TokenMillSDK {
     swapParameters: SwapParameters,
     devKeypair?: Keypair
   ): Promise<void> {
-    if (!devKeypair) {
-      if (!this.anchorWallet) {
-        throw new Error(
-          "This function requires a Keypair or to have an initialized anchor wallet"
-        );
-      }
-      devKeypair = this.anchorWallet.payer;
-    }
+    const keypair = this.validateKeypair(devKeypair, "swap");
 
     const swapIx = await this.swapInstruction(accounts, swapParameters);
 
-    const tx = new Transaction().add(swapIx);
-
-    tx.recentBlockhash = (
-      await this.connection.getLatestBlockhash("confirmed")
-    ).blockhash;
-
-    tx.feePayer = accounts.user;
-    tx.sign(devKeypair);
+    const tx = await this.createAndSignTransaction([swapIx], accounts.user, [
+      keypair,
+    ]);
 
     const signature = await this.connection.sendRawTransaction(tx.serialize());
 
@@ -178,7 +154,6 @@ export class TokenMillSDK {
     return prepareTokenMetadata(this, devKeypair, tokenAddress, tokenMetadata);
   }
 
-  // Instruction methods - delegate to existing instruction functions
   public async createMarketInstruction(
     accounts: CreateMarketAccounts,
     args: CreateMarketArgs
@@ -204,5 +179,40 @@ export class TokenMillSDK {
     accounts: UpdateFeeReserveAccounts
   ): Promise<TransactionInstruction> {
     return updateFeeReserveInstruction(this, accounts);
+  }
+
+  private validateKeypair(
+    devKeypair?: Keypair,
+    operation: string = "operation"
+  ): Keypair {
+    if (!devKeypair) {
+      if (!this.anchorWallet) {
+        throw new Error(
+          `${operation} requires a Keypair or to have an initialized anchor wallet`
+        );
+      }
+      return this.anchorWallet.payer;
+    }
+    return devKeypair;
+  }
+
+  private async createAndSignTransaction(
+    instructions: TransactionInstruction[],
+    payer: PublicKey,
+    signers: Keypair[]
+  ): Promise<Transaction> {
+    const tx = new Transaction().add(...instructions);
+
+    tx.recentBlockhash = (
+      await this.connection.getLatestBlockhash("confirmed")
+    ).blockhash;
+
+    tx.feePayer = payer;
+
+    if (signers.length > 0) {
+      tx.partialSign(...signers);
+    }
+
+    return tx;
   }
 }
