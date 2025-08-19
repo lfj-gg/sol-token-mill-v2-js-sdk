@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 
 export interface SwapParameters {
@@ -14,6 +14,11 @@ export interface SwapResult {
   feeAmountTokenIn: BN;
   feeAmountToken1: BN;
   nextSqrtPrice: BN;
+}
+
+export interface CreateMarketOptions {
+  devKeypair?: Keypair;
+  initialSwapParameters?: SwapParameters;
 }
 
 export interface CreateMarketAccounts {

@@ -20,9 +20,10 @@ import type {
   SwapAccounts,
   SwapParameters,
   SwapAccountsRaw,
+  CreateMarketOptions,
 } from "./types";
 import {
-  prepareMarketWithVanityAddress,
+  prepareMarketIxWithVanityAddress,
   prepareTokenMetadata,
   type TokenMetadata,
 } from "./prepareMarket";
@@ -60,9 +61,9 @@ export class TokenMillSDK {
 
   public async createMarket(
     tokenMetadata: TokenMetadata,
-    devKeypair?: Keypair
+    options?: CreateMarketOptions
   ): Promise<void> {
-    const keypair = this.validateKeypair(devKeypair, "createMarket");
+    const keypair = this.validateKeypair(options?.devKeypair, "createMarket");
 
     const { tokenAddress, ix: marketCreationIx } =
       await this.prepareMarketWithVanityAddress(keypair, tokenMetadata);
@@ -77,6 +78,14 @@ export class TokenMillSDK {
     const config = await this.program.account.tokenMillConfig.fetch(
       TOKEN_MILL_CONFIG_ACCOUNT
     );
+
+    // Defaults to buying 1 token, as markets require a swap to be indexed
+    const swapParameters = options?.initialSwapParameters || {
+      buyExactOut: {
+        amountOut: new anchor.BN(1e6),
+        maxAmountIn: new anchor.BN(1e6),
+      },
+    };
 
     const swapIx = await this.swapInstructionRaw(
       {
@@ -95,12 +104,7 @@ export class TokenMillSDK {
         protocolFeeReserve: config.protocolFeeReserve,
         creatorFeePool: config.creatorFeePool,
       },
-      {
-        buyExactOut: {
-          amountOut: new anchor.BN(1e6),
-          maxAmountIn: new anchor.BN(1e6),
-        },
-      }
+      swapParameters
     );
 
     const tx = await this.createAndSignTransaction(
@@ -143,7 +147,7 @@ export class TokenMillSDK {
     devKeypair: Keypair,
     tokenMetadata: TokenMetadata
   ): Promise<{ tokenAddress: PublicKey; ix: TransactionInstruction }> {
-    return prepareMarketWithVanityAddress(this, devKeypair, tokenMetadata);
+    return prepareMarketIxWithVanityAddress(this, devKeypair, tokenMetadata);
   }
 
   public async prepareTokenMetadata(

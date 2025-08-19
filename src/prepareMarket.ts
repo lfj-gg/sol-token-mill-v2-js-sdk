@@ -15,7 +15,7 @@ import {
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import nacl from "tweetnacl";
 import naclUtil from "tweetnacl-util";
-import { getVanityAddress, signMarketCreationTransaction } from "./api/vanity";
+import { getVanityAddress } from "./api/vanity";
 
 export interface TokenMetadata {
   name: string;
@@ -30,7 +30,7 @@ export interface TokenMetadata {
   };
 }
 
-export async function prepareMarketWithVanityAddress(
+export async function prepareMarketIxWithVanityAddress(
   sdk: TokenMillSDK,
   devKeypair: Keypair,
   tokenMetadata: TokenMetadata
