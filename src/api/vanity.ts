@@ -6,8 +6,10 @@ import type { TokenMillSDK } from "../sdk";
 export async function getVanityAddress(): Promise<PublicKey> {
   const dummySdk = {} as TokenMillSDK;
   const client = new ApiClient(dummySdk);
-  
-  const data = await client.requestBarn<{ id: string }>("/v2/keypairs/available");
+
+  const data = await client.requestBarn<{ id: string }>(
+    "/v2/keypairs/available"
+  );
   return new PublicKey(data.id);
 }
 
@@ -16,7 +18,7 @@ export async function signMarketCreationTransaction(
 ): Promise<Transaction> {
   const dummySdk = {} as TokenMillSDK;
   const client = new ApiClient(dummySdk);
-  
+
   const data = await client.requestBarn<{ transaction: string }>(
     "/v2/keypairs/sign-transaction",
     {

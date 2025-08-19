@@ -21,7 +21,10 @@ export class ApiClient {
     }
   }
 
-  private getDefaultHeaders(requiresAuth: boolean = false, accessToken?: string): Record<string, string> {
+  private getDefaultHeaders(
+    requiresAuth: boolean = false,
+    accessToken?: string
+  ): Record<string, string> {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
@@ -40,12 +43,12 @@ export class ApiClient {
   private getBarnHeaders(): Record<string, string> {
     return {
       "Content-Type": "application/json",
-      "referer": "https://tokenmill.xyz",
+      referer: "https://tokenmill.xyz",
     };
   }
 
   async request<T>(
-    url: string, 
+    url: string,
     options: ApiRequestOptions = {},
     accessToken?: string
   ): Promise<T> {
@@ -54,7 +57,7 @@ export class ApiClient {
     }
 
     const isBarnRequest = url.includes(API_ENDPOINTS.BARN);
-    const defaultHeaders = isBarnRequest 
+    const defaultHeaders = isBarnRequest
       ? this.getBarnHeaders()
       : this.getDefaultHeaders(options.requiresAuth, accessToken);
 
@@ -71,7 +74,7 @@ export class ApiClient {
       throw new Error(`API request failed: ${response.statusText}`);
     }
 
-    return await response.json() as T;
+    return (await response.json()) as T;
   }
 
   async requestMain<T>(

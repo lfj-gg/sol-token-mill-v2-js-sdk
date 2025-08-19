@@ -30,12 +30,13 @@ const tokenMetadata: TokenMetadata = {
 };
 
 await sdk.createMarket(tokenMetadata);
-Optional swap parameters can be provided for the initial buy
- await sdk.createMarket(tokenMetadata, {
-      initialSwapParameters: {
-        buyExactIn: { amountIn: new BN(1e9), minAmountOut: new BN(0) },
-      },
-    });
+
+// Optional swap parameters can be provided for the initial buy
+await sdk.createMarket(tokenMetadata, {
+  initialSwapParameters: {
+    buyExactIn: { amountIn: new BN(1e9), minAmountOut: new BN(0) },
+  },
+});
 ```
 
 ### Swap

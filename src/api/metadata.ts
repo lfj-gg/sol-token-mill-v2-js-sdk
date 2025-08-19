@@ -11,7 +11,7 @@ export async function getMessageToSign(
   address: PublicKey
 ): Promise<string> {
   const client = new ApiClient(sdk);
-  
+
   const data = await client.requestMain<{ message: string }>(
     "/v2/auth/web3-message",
     {
@@ -19,7 +19,7 @@ export async function getMessageToSign(
       body: JSON.stringify({ address }),
     }
   );
-  
+
   return data.message;
 }
 
@@ -30,15 +30,15 @@ export async function login(
   signature: string
 ): Promise<string> {
   const client = new ApiClient(sdk);
-  
-  const data = await client.requestMain<{ accessToken: string; refreshToken: string }>(
-    "/v2/auth/login",
-    {
-      method: "POST",
-      body: JSON.stringify({ address, message, signature }),
-    }
-  );
-  
+
+  const data = await client.requestMain<{
+    accessToken: string;
+    refreshToken: string;
+  }>("/v2/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ address, message, signature }),
+  });
+
   return data.accessToken;
 }
 
@@ -62,7 +62,7 @@ export async function requestUpload(
   }
 
   const client = new ApiClient(sdk);
-  
+
   return await client.requestMain(
     "/v2/markets/drafts/upload/posturl",
     {
@@ -109,7 +109,7 @@ export async function updateTokenMetadata(
 ): Promise<void> {
   const marketAddress = findMarketAddress(token);
   const client = new ApiClient(sdk);
-  
+
   await client.requestMain<void>(
     `/v2/markets/solana/${marketAddress.toBase58()}/${token.toBase58()}`,
     {
@@ -137,7 +137,7 @@ export async function fetchTokenMetadata(
   mint: PublicKey
 ): Promise<any> {
   const client = new ApiClient(sdk);
-  
+
   return await client.requestMain(
     `/v2/tokens/solana/${mint.toBase58()}/metadata`
   );
