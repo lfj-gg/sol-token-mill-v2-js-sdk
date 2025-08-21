@@ -2,7 +2,7 @@ import type { PublicKey } from "@solana/web3.js";
 import type { TokenMillSDK } from "../sdk";
 import { findMarketAddress } from "../utils/pda";
 import type { TokenMetadata } from "../prepareMarket";
-import { ApiClient } from "./client";
+import { API_ENDPOINTS, ApiClient } from "./client";
 
 const MAX_FILE_SIZE = 5242880; // 5MB in bytes
 
@@ -129,7 +129,7 @@ export async function updateTokenMetadata(
 }
 
 export function getMetadataURL(token: PublicKey): string {
-  return `/v2/tokens/solana/${token.toBase58()}/metadata`;
+  return `${API_ENDPOINTS.MAIN}/v2/tokens/solana/${token.toBase58()}/metadata`;
 }
 
 export async function fetchTokenMetadata(
