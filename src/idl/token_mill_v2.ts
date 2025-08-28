@@ -386,6 +386,58 @@ export type TokenMillV2 = {
       ];
     },
     {
+      name: "forceRemoveFeeReserve";
+      discriminator: [171, 249, 234, 88, 247, 69, 109, 249];
+      accounts: [
+        {
+          name: "config";
+          relations: ["market"];
+        },
+        {
+          name: "market";
+          writable: true;
+        },
+        {
+          name: "admin";
+          signer: true;
+          relations: ["config"];
+        },
+        {
+          name: "eventAuthority";
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [
+                  95,
+                  95,
+                  101,
+                  118,
+                  101,
+                  110,
+                  116,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ];
+              }
+            ];
+          };
+        },
+        {
+          name: "program";
+        }
+      ];
+      args: [];
+    },
+    {
       name: "removeSwapAuthority";
       discriminator: [128, 249, 213, 153, 65, 171, 76, 171];
       accounts: [
@@ -1003,6 +1055,10 @@ export type TokenMillV2 = {
     {
       code: 6019;
       name: "slippageExceeded";
+    },
+    {
+      code: 6020;
+      name: "canOnlyOptInKotm";
     }
   ];
   types: [
