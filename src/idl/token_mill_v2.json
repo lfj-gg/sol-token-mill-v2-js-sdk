@@ -234,6 +234,43 @@
       ]
     },
     {
+      "name": "force_remove_fee_reserve",
+      "discriminator": [171, 249, 234, 88, 247, 69, 109, 249],
+      "accounts": [
+        {
+          "name": "config",
+          "relations": ["market"]
+        },
+        {
+          "name": "market",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": ["config"]
+        },
+        {
+          "name": "event_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  95, 95, 101, 118, 101, 110, 116, 95, 97, 117, 116, 104, 111,
+                  114, 105, 116, 121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "program"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "remove_swap_authority",
       "discriminator": [128, 249, 213, 153, 65, 171, 76, 171],
       "accounts": [
@@ -746,6 +783,10 @@
     {
       "code": 6019,
       "name": "SlippageExceeded"
+    },
+    {
+      "code": 6020,
+      "name": "CanOnlyOptInKOTM"
     }
   ],
   "types": [
